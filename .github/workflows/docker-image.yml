@@ -1,0 +1,59 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref }}
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Set Yaml
+        uses: microsoft/variable-substitution@v1
+        with:
+          files: src/main/resources/application.yml
+        env:
+          spring.datasource.url: ${{ secrets.DB_URL }}
+          spring.datasource.username: ${{ secrets.DB_USERNAME }}
+          spring.datasource.password: ${{ secrets.DB_PASSWORD }}
+      - name: Grant permission for gradlew
+        run: chmod +x ./gradlew
+      - name: Build with Gradle
+        run: ./gradlew clean build -x test
+      - name: Docker build and publish
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ vars.APP_NAME }}:${{ github.ref_name }} .
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ vars.APP_NAME }}:${{ github.ref_name }}
+          
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: NCP SSH Login and Docker Image pull and run
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            echo ${{ secrets.DEV_NCP_PASSWORD }} | sudo -S docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+            echo ${{ secrets.DEV_NCP_PASSWORD }} | sudo -S docker stop ${{ vars.APP_NAME }}
+            echo ${{ secrets.DEV_NCP_PASSWORD }} | sudo -S docker rm -f ${{ vars.APP_NAME }}
+            echo ${{ secrets.DEV_NCP_PASSWORD }} | sudo -S docker pull ${{ secrets.DOCKER_USERNAME }}/${{ vars.APP_NAME }}:main
+            echo ${{ secrets.DEV_NCP_PASSWORD }} | sudo -S docker run -d --name ${{ vars.APP_NAME }} --network dokalab_blog_network -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/${{ vars.APP_NAME }}:main  # 네트워크 설정
+            echo ${{ secrets.DEV_NCP_PASSWORD }} | sudo -S docker image prune -f
+    
