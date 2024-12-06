@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dokalab.blog.post.PostMapper">
+    <select id="getPostCountByCategoryId" parameterType="long" resultType="long">
+        SELECT COUNT(*)
+        FROM tbl_post_meta
+        WHERE category_id = #{categoryId}
+          AND status = 'published'
+          AND is_visible = true
+    </select>
+
+    <resultMap id="CategoryAndPostResultMap" type="com.dokalab.blog.post.model.CategoryAndPostDto">
+        <id property="id" column="category_id"/>
+        <result property="name" column="category_name"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="parentName" column="parent_name"/>
+        <collection property="posts" ofType="com.dokalab.blog.post.model.PostMetaDto">
+            <id property="postId" column="post_id"/>
+            <result property="postTitle" column="post_title"/>
+            <result property="postDate" column="created_at"/>
+            <result property="isVisible" column="is_visible"/>
+            <result property="categoryId" column="category_id"/>
+            <result property="status" column="status"/>
+            <result property="summary" column="summary"/>
+        </collection>
+    </resultMap>
+
+    <select id="getCategoryWithPosts" parameterType="long" resultMap="CategoryAndPostResultMap">
+        SELECT 
+            c.category_id,
+            c.category_name,
+            parent.category_id as parent_id,
+            parent.category_name as parent_name,
+            p.post_id,
+            p.post_title,
+            p.created_at,
+            p.is_visible,
+            p.category_id,
+            p.status,
+            SUBSTRING(a.article, 1, 15) as summary
+        FROM tbl_category c
+        LEFT JOIN tbl_category parent ON c.parent_id = parent.category_id
+        LEFT JOIN (
+            SELECT * FROM tbl_post_meta 
+            WHERE status = 'published' 
+            AND is_visible = true
+        ) p ON c.category_id = p.category_id
+        LEFT JOIN tbl_post_article a ON p.post_id = a.post_id
+        WHERE c.category_id = #{categoryId}
+        ORDER BY p.created_at DESC
+    </select>
+
+    <select id="getPostsByCategory" parameterType="long" resultType="com.dokalab.blog.post.model.PostMetaDto">
+        SELECT 
+            post_id as postId,
+            post_title as postTitle,
+            created_at as postDate,
+            is_visible as isVisible,
+            category_id as categoryId,
+            status,
+            SUBSTRING(article, 1, 15) as summary
+        FROM tbl_post_meta
+        LEFT JOIN tbl_post_article ON tbl_post_meta.post_id = tbl_post_article.post_id
+        WHERE category_id = #{categoryId}
+          AND status = 'published'
+          AND is_visible = true
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="getAllPostsWithCategory" resultType="com.dokalab.blog.post.AllPostsWithCategoryDto">
+        SELECT 
+            p.post_id as id,
+            p.post_title as title,
+            SUBSTRING(a.article, 1, 15) as summary,
+            p.created_at as postDate,
+            c.category_id as categoryId,
+            c.category_name as categoryName,
+            parent.category_id as parentId,
+            parent.category_name as parentName
+        FROM tbl_post_meta p
+        LEFT JOIN tbl_post_article a ON p.post_id = a.post_id
+        LEFT JOIN tbl_category c ON p.category_id = c.category_id
+        LEFT JOIN tbl_category parent ON c.parent_id = parent.category_id
+        WHERE p.status = 'published' 
+          AND p.is_visible = true
+        ORDER BY p.created_at DESC
+    </select>
+</mapper> 

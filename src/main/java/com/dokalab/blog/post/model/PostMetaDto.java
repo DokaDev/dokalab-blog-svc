@@ -5,11 +5,13 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class PostMeta {
+public class PostMetaDto {
     private Long postId;
     private String postTitle;
-    private LocalDateTime createdAt;
+    private LocalDateTime postDate;
     private Boolean isVisible;
-    private PostStatus status;
     private Long categoryId;
+    private String status;
+
+    private String summary;
 }

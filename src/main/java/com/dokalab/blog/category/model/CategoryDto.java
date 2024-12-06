@@ -6,15 +6,13 @@ import lombok.*;
 import java.util.List;
 
 @Data
-public class Category {
+public class CategoryDto {
     private Long categoryId;
     private String categoryName;
 
-//    @ToString.Exclude
     @JsonManagedReference
-    private List<Category> subCategories;
+    private List<CategoryDto> subCategories;
 
-//    @ToString.Exclude
-//    @JsonBackReference
-//    private Category parentCategory;
+    @JsonBackReference
+    private CategoryDto parentCategory;
 }

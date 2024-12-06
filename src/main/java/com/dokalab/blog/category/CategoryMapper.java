@@ -1,13 +1,14 @@
 package com.dokalab.blog.category;
 
-import com.dokalab.blog.category.model.Category;
+import com.dokalab.blog.category.model.CategoryDto;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
 
 @Mapper
 public interface CategoryMapper {
-    List<Category> findAllCategories();
-    List<Category> findSubCategoriesByParentCategoryId(Long categoryId);
-    Category findCategoryByCategoryId(Long categoryId);
+    List<CategoryDto> getCategoryHierarchy();
+    // List<CategoryDto> findAllCategories();
+    // List<CategoryDto> findSubCategoriesByParentCategoryId(Long categoryId);
+    // CategoryDto findCategoryByCategoryId(Long categoryId);
 }
