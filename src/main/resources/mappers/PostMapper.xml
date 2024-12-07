@@ -87,4 +87,23 @@
           AND p.is_visible = true
         ORDER BY p.created_at DESC
     </select>
+
+    <select id="getPostById" parameterType="long" resultType="com.dokalab.blog.post.model.PostMetaAndArticle">
+        SELECT 
+            p.post_id as postId,
+            p.post_title as postTitle,
+            a.article as postContent,
+            p.created_at as createdAt,
+            c.category_id as categoryId,
+            c.category_name as categoryName,
+            parent.category_id as parentCategoryId,
+            parent.category_name as parentCategoryName
+        FROM tbl_post_meta p
+        LEFT JOIN tbl_post_article a ON p.post_id = a.post_id
+        LEFT JOIN tbl_category c ON p.category_id = c.category_id
+        LEFT JOIN tbl_category parent ON c.parent_id = parent.category_id
+        WHERE p.post_id = #{postId}
+          AND p.status = 'published' 
+          AND p.is_visible = true
+    </select>
 </mapper> 

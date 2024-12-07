@@ -11,4 +11,5 @@ public interface PostMapper {
     CategoryAndPostDto getCategoryWithPosts(Long categoryId);
     List<PostMetaDto> getPostsByCategory(Long categoryId);
     List<AllPostsWithCategoryDto> getAllPostsWithCategory();
+    PostMetaAndArticle getPostById(Long postId);
 }
