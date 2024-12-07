@@ -25,6 +25,14 @@ public class PostController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<CategoryAndPostDto> getPostsByCategory(@PathVariable Long categoryId) {
+        System.out.println("카테고리별 포스트 요청 받음");
+        CategoryAndPostDto result = postService.getCategoryWithPosts(categoryId);
+
+        return ResponseEntity.ok(result);
+    }
+
     @GetMapping("/parent-category/{parentId}")
     public ResponseEntity<List<AllPostsWithCategoryDto>> getPostsByParentCategory(
             @PathVariable Long parentId) {
